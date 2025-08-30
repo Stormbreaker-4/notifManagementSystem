@@ -16,3 +16,7 @@ build/
 # IDE settings
 .vscode/
 .idea/
+
+
+# Testing files
+test.txt
