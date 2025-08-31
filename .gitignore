@@ -20,3 +20,4 @@ build/
 
 # Testing files
 test.txt
+auth_tokens.txt
