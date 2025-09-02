@@ -12,8 +12,12 @@ export default function LoginPage() {
         e.preventDefault();
         setErr("");
         try {
-            await login(form.email, form.password);
-            nav("/");
+            const data = await login(form.email, form.password); // returns user object
+            if (data.role === "coordinator") {
+                nav("/coordinator/dashboard", { replace: true });
+            } else {
+                nav("/profile", { replace: true });
+            }
         } catch (e2) {
             setErr(e2?.response?.data?.message || "Login failed");
         }
