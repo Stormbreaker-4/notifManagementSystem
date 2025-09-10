@@ -3,14 +3,19 @@ dotenv.config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const logger = require('./middleware/logEvents');
 
 // Middleware
-app.use(cors());
-app.use(logger);
+app.use(cors({
+    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json());
+app.use(logger);
 
 // Routes
 const authRoutes = require('./routes/authRoutes');

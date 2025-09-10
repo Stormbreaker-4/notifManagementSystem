@@ -28,9 +28,12 @@ router.get('/:id', authorizeRoles('student', 'admin'), (req, res, next) => {
 });
 
 // PUT  /api/users/:id
-router.put('/:id', authorizeRoles('student', 'admin'), (req, res, next) => {
+router.put('/:id', authorizeRoles('student', 'coordinator', 'admin'), (req, res, next) => {
     if (req.user.role === 'student' && req.user._id.toString() !== req.params.id) {
         return res.status(403).json({ message: 'Students can only update their own profile' });
+    }
+    if (req.user.role === 'coordinator' && req.user._id.toString() !== req.params.id) {
+        return res.status(403).json({ message: 'Coordinators can only update their own profile' });
     }
     // students cannot change role
     if (req.user.role !== 'admin' && 'role' in req.body) {
