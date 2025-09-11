@@ -67,6 +67,46 @@ const getEvents = async (req, res) => {
     }
 };
 
-// other functions: getEventById, updateEvent (should re-trigger notifications if event updated), deleteEvent
+const getEventById = async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id)
+            .populate('createdBy', 'name email role')   // include coordinator info
+            .populate('categoryId', 'name');           // include category details
 
-module.exports = { createEvent, getEvents };
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        res.json(event);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const registerForEvent = async (req, res) => {
+    try {
+        const eventId = req.params.id;
+        const userId = req.user._id;
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        // Prevent duplicate registration
+        if (event.registrations.includes(userId)) {
+            return res.status(400).json({ message: 'Already registered for this event' });
+        }
+
+        event.registrations.push(userId);
+        await event.save();
+
+        res.status(200).json({ message: 'Successfully registered for the event', event });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// other functions: updateEvent (should re-trigger notifications if event updated), deleteEvent
+
+module.exports = { createEvent, getEvents, getEventById, registerForEvent };

@@ -9,15 +9,16 @@ yarn-error.log*
 # Environment files
 .env
 
-# Build outputs
+# Build outputs (backend)
 dist/
 build/
 
-# IDE settings
+# IDE/editor settings
 .vscode/
 .idea/
 
-
-# Testing files
+# Temporary/test files
+*.tmp
+*.log
 test.txt
 auth_tokens.txt

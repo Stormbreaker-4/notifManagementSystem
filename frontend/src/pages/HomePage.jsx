@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchEvents } from "../api/eventApi";
+import EventCard from "../components/EventCard";
 
 // keep ONLY ONE helper
 const typeFromEvent = (ev) => {
@@ -40,6 +41,9 @@ export default function HomePage() {
     );
     const nonFests = filtered.filter((e) => !fests.includes(e));
 
+    // onRegister is currently not implemented server-side; keep it undefined so EventCard disables the button.
+    const onRegister = undefined;
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
@@ -56,9 +60,9 @@ export default function HomePage() {
                 <p className="text-gray-600">Loading…</p>
             ) : (
                 <>
-                    <Section title="All Events" items={nonFests} />
+                    <Section title="All Events" items={nonFests} onRegister={onRegister} />
                     {!!fests.length && (
-                        <Section title="Fest Events (TechnoVIT & Vibrance)" items={fests} />
+                        <Section title="Fest Events (TechnoVIT & Vibrance)" items={fests} onRegister={onRegister} />
                     )}
                 </>
             )}
@@ -66,52 +70,17 @@ export default function HomePage() {
     );
 }
 
-function Section({ title, items }) {
+function Section({ title, items, onRegister }) {
     if (!items.length) return null;
     return (
         <div className="mb-10">
             <h2 className="text-xl font-semibold mb-4">{title}</h2>
             <div className="grid md:grid-cols-2 gap-6">
                 {items.map((event) => (
-                    <Card key={event._id || event.id} event={event} />
+                    <EventCard key={event._id || event.id} event={event} onRegister={onRegister} />
                 ))}
             </div>
         </div>
     );
 }
 
-function Card({ event }) {
-    const type = typeFromEvent(event);
-    const dateTime = event?.eventDateTime ? new Date(event.eventDateTime) : null;
-
-    return (
-        <div className="bg-white shadow-md rounded-lg p-6 border">
-            <h3 className="text-lg font-semibold">{event.title}</h3>
-            <p className="text-sm text-gray-500 mb-2">{type}</p>
-            <p className="text-gray-700 mb-3">{event.description}</p>
-
-            <p className="text-sm text-gray-600">
-                <span className="font-semibold">Date:</span>{" "}
-                {dateTime ? dateTime.toLocaleDateString() : "TBA"} &nbsp; |{" "}
-                <span className="font-semibold">Time:</span>{" "}
-                {dateTime ? dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBA"}
-            </p>
-            <p className="text-sm text-gray-600">
-                <span className="font-semibold">Venue:</span> {event.venue || "TBA"}
-            </p>
-            {event?.conductedBy && (
-                <p className="text-sm text-gray-600">
-                    <span className="font-semibold">Conducted By:</span> {event.conductedBy}
-                </p>
-            )}
-
-            <button
-                disabled
-                title="Registration endpoint not implemented yet"
-                className="mt-4 bg-indigo-500 text-white px-4 py-2 rounded opacity-60 cursor-not-allowed"
-            >
-                Register
-            </button>
-        </div>
-    );
-}

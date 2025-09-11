@@ -7,7 +7,8 @@ const eventSchema = new mongoose.Schema({
     venue: { type: String },
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    createdOn: { type: Date, default: Date.now }
+    createdOn: { type: Date, default: Date.now },
+    registrations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

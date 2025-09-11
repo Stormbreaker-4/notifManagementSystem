@@ -67,7 +67,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         // call backend to revoke refresh + clear cookie (best-effort)
         fetch("http://localhost:5000/api/auth/logout", { method: "POST", credentials: "include" })
-            .finally(() => { if (typeof window !== 'undefined') window.location.replace('/login'); });
+        .catch(() => {});
+            // .finally(() => { if (typeof window !== 'undefined') window.location.replace('/login'); });
     };
 
     const value = useMemo(() => ({

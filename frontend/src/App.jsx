@@ -8,6 +8,9 @@ import Dashboard from "./pages/Coordinator/Dashboard";
 import MyEvents from "./pages/Coordinator/MyEvents";
 import CreateEvent from "./pages/Coordinator/CreateEvent";
 import EventRegistrations from "./pages/Coordinator/EventRegistrations";
+import ProtectedRoute from "./components/ProtectedRoute";
+import NotFound from "./pages/NotFound";
+import EventDetails from "./pages/EventDetails";
 
 function App() {
     return (
@@ -18,11 +21,22 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/coordinator/dashboard" element={<Dashboard />} />
-                    <Route path="/coordinator/myevents" element={<MyEvents />} />
-                    <Route path="/coordinator/create" element={<CreateEvent />} />
-                    <Route path="/coordinator/registrations/:eventId" element={<EventRegistrations />} />
+                    <Route path="/events/:id" element={<EventDetails />} />
+
+
+                    {/* Protected: user must be authenticated */}
+                    <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+
+
+                    {/* Coordinator-only routes */}
+                    <Route path="/coordinator/dashboard" element={<ProtectedRoute roles={["coordinator"]}><Dashboard /></ProtectedRoute>} />
+                    <Route path="/coordinator/myevents" element={<ProtectedRoute roles={["coordinator"]}><MyEvents /></ProtectedRoute>} />
+                    <Route path="/coordinator/create" element={<ProtectedRoute roles={["coordinator"]}><CreateEvent /></ProtectedRoute>} />
+                    <Route path="/coordinator/registrations/:eventId" element={<ProtectedRoute roles={["coordinator"]}><EventRegistrations /></ProtectedRoute>} />
+
+
+                    {/* Catch-all */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </div>
         </Router>
