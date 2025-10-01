@@ -12,6 +12,15 @@ const createCategory = async (req, res) => {
 
 }
 
+const listCategories = async (req, res) => {
+    try {
+        const cats = await Category.find().sort({ name: 1 }).lean();
+        res.json(cats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const getCategoryByType = async (req, res) => {
     try {
         const category_type = req.params.type;
@@ -22,4 +31,4 @@ const getCategoryByType = async (req, res) => {
     }
 }
 
-module.exports = { createCategory, getCategoryByType };
+module.exports = { createCategory, listCategories, getCategoryByType };

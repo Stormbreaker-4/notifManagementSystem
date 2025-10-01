@@ -13,8 +13,8 @@ const PersonalInfoTab = () => {
             <h2 className="text-lg font-semibold">Personal Info</h2>
             <p><span className="font-medium">Name:</span> {user.name}</p>
             <p><span className="font-medium">Email:</span> {user.email}</p>
+            {user.mobileNumber && <p><span className="font-medium">Mobile:</span> {user.mobileNumber}</p>}
             <p><span className="font-medium">Role:</span> {user.role}</p>
-            <p className="text-xs text-gray-500 mt-2">User ID: {user._id}</p>
         </div>
     );
 };

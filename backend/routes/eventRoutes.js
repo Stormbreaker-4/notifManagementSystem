@@ -11,4 +11,11 @@ router.post('/', protect, authorizeRoles('admin', 'coordinator'), eventControlle
 
 router.post('/:id/register', protect, authorizeRoles('student'), eventController.registerForEvent);
 
+// Update/delete by admin or the coordinator who created the event
+router.put('/:id', protect, authorizeRoles('admin', 'coordinator'), eventController.updateEvent);
+router.delete('/:id', protect, authorizeRoles('admin', 'coordinator'), eventController.deleteEvent);
+
+// List registrations; CSV export supported with ?format=csv
+router.get('/:id/registrations', protect, authorizeRoles('admin', 'coordinator'), eventController.listRegistrations);
+
 module.exports = router;

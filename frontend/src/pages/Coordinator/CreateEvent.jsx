@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { createEvent } from "../../api/eventApi";
+import { fetchAllCategories } from "../../api/categoryApi";
 import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -13,8 +14,8 @@ export default function CreateEvent() {
         time: "",
         venue: "",
         categoryId: "", // you can pre-fill with known categoryId
-        conductedBy: "", // optional if you show it
     });
+    const [categories, setCategories] = useState([]);
     const [err, setErr] = useState("");
     const [ok, setOk] = useState("");
 
@@ -30,8 +31,6 @@ export default function CreateEvent() {
                 eventDateTime,
                 venue: form.venue,
                 categoryId: form.categoryId,
-                createdBy: user?._id,
-                conductedBy: form.conductedBy,
             });
             setOk("Event created!");
             setTimeout(() => nav("/coordinator/myevents"), 600);
@@ -39,6 +38,16 @@ export default function CreateEvent() {
             setErr(e2?.response?.data?.message || "Failed to create event");
         }
     }
+
+    // load categories for dropdown
+    useEffect(() => {
+        (async () => {
+            try {
+                const { data } = await fetchAllCategories();
+                setCategories(data || []);
+            } catch (e) { /* ignore */ }
+        })();
+    }, []);
 
     return (
         <div className="p-6 max-w-xl mx-auto">
@@ -51,8 +60,12 @@ export default function CreateEvent() {
                     value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
                 <textarea className="border p-2" placeholder="Description"
                     value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                <input className="border p-2" placeholder="Category ID"
-                    value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} />
+                <select className="border p-2" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                    <option value="">Select Category</option>
+                    {categories.map((c) => (
+                        <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                </select>
                 <div className="grid grid-cols-2 gap-2">
                     <input type="date" className="border p-2"
                         value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
@@ -61,8 +74,6 @@ export default function CreateEvent() {
                 </div>
                 <input className="border p-2" placeholder="Venue"
                     value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
-                <input className="border p-2" placeholder="Conducted By"
-                    value={form.conductedBy} onChange={(e) => setForm({ ...form, conductedBy: e.target.value })} />
                 <button className="bg-green-600 text-white px-4 py-2 rounded">Save Event</button>
             </form>
         </div>

@@ -6,7 +6,7 @@ export default function RegisterPage() {
     const { register } = useContext(AuthContext);
     const nav = useNavigate();
     const [form, setForm] = useState({
-        name: "", email: "", password: "", role: "student",
+        name: "", email: "", password: "", mobileNumber: "", role: "student",
     });
     const [err, setErr] = useState("");
 
@@ -32,6 +32,8 @@ export default function RegisterPage() {
                     value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 <input className="border p-2 w-full" placeholder="Password" type="password"
                     value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                <input className="border p-2 w-full" placeholder="Mobile Number"
+                    value={form.mobileNumber} onChange={(e) => setForm({ ...form, mobileNumber: e.target.value })} />
                 <select className="border p-2 w-full"
                     value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                     <option value="student">Student</option>

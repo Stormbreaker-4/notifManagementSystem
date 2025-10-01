@@ -18,7 +18,7 @@ const createEvent = async (req, res) => {
             eventDateTime: payload.eventDateTime,
             venue: payload.venue,
             categoryId: payload.categoryId,
-            createdBy: payload.createdBy
+            createdBy: req.user?._id || payload.createdBy
         });
 
         await event.save();
@@ -70,7 +70,7 @@ const getEvents = async (req, res) => {
 const getEventById = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id)
-            .populate('createdBy', 'name email role')   // include coordinator info
+            .populate('createdBy', 'name email role mobileNumber')   // include coordinator info (with contact)
             .populate('categoryId', 'name');           // include category details
 
         if (!event) {
@@ -107,6 +107,122 @@ const registerForEvent = async (req, res) => {
     }
 };
 
-// other functions: updateEvent (should re-trigger notifications if event updated), deleteEvent
+// Update event, and re-generate notifications if category/time/title/venue changed
+const updateEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
 
-module.exports = { createEvent, getEvents, getEventById, registerForEvent };
+        const event = await Event.findById(id);
+        if (!event) return res.status(404).json({ message: 'Event not found' });
+
+        const isCoordinator = req.user.role === 'coordinator';
+        if (isCoordinator && String(event.createdBy) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Only creator coordinator can update this event' });
+        }
+
+        const before = {
+            title: event.title,
+            description: event.description,
+            eventDateTime: event.eventDateTime?.toISOString?.(),
+            venue: event.venue,
+            categoryId: String(event.categoryId)
+        };
+
+        if (updates.title !== undefined) event.title = updates.title;
+        if (updates.description !== undefined) event.description = updates.description;
+        if (updates.eventDateTime !== undefined) event.eventDateTime = updates.eventDateTime;
+        if (updates.venue !== undefined) event.venue = updates.venue;
+        if (updates.categoryId !== undefined) event.categoryId = updates.categoryId;
+
+        await event.save();
+
+        const after = {
+            title: event.title,
+            description: event.description,
+            eventDateTime: event.eventDateTime?.toISOString?.(),
+            venue: event.venue,
+            categoryId: String(event.categoryId)
+        };
+
+        const impactfulChange = (
+            before.title !== after.title ||
+            before.venue !== after.venue ||
+            before.eventDateTime !== after.eventDateTime ||
+            before.categoryId !== after.categoryId
+        );
+
+        let regenerated = 0;
+        if (impactfulChange) {
+            // Simple strategy: remove pending notifications for this event and re-create based on current preferences
+            await Notification.deleteMany({ eventId: event._id, status: { $in: ['pending'] } });
+
+            const preferences = await Preference.find({ categoryId: event.categoryId, optedIn: true }).lean();
+            const notifications = preferences.map(pref => ({
+                eventId: event._id,
+                userId: pref.userId,
+                channel: 'email',
+                scheduledTime: new Date()
+            }));
+            if (notifications.length) {
+                await Notification.insertMany(notifications);
+                regenerated = notifications.length;
+            }
+        }
+
+        res.json({ event, regeneratedNotifications: regenerated });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Delete event and associated pending notifications
+const deleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const event = await Event.findById(id);
+        if (!event) return res.status(404).json({ message: 'Event not found' });
+
+        const isCoordinator = req.user.role === 'coordinator';
+        if (isCoordinator && String(event.createdBy) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Only creator coordinator can delete this event' });
+        }
+
+        await Notification.deleteMany({ eventId: id, status: { $in: ['pending'] } });
+        await Event.findByIdAndDelete(id);
+        res.json({ message: 'Event deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// List registrations for an event; ?format=csv to export
+const listRegistrations = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const event = await Event.findById(id).populate('registrations', 'name email');
+        if (!event) return res.status(404).json({ message: 'Event not found' });
+
+        const isCoordinator = req.user.role === 'coordinator';
+        if (isCoordinator && String(event.createdBy) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Only creator coordinator can view registrations' });
+        }
+
+        const format = (req.query.format || '').toLowerCase();
+        const rows = event.registrations.map(u => ({ name: u.name, email: u.email }));
+
+        if (format === 'csv') {
+            const header = 'name,email\n';
+            const csv = header + rows.map(r => `${r.name},${r.email}`).join('\n');
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="event_${id}_registrations.csv"`);
+            return res.send(csv);
+        }
+
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createEvent, getEvents, getEventById, registerForEvent, updateEvent, deleteEvent, listRegistrations };

@@ -71,7 +71,7 @@ export default function PreferencesTab() {
                     <div key={r.categoryId} className="flex items-center justify-between border rounded p-3">
                         <div>
                             <p className="font-medium">{r.categoryName}</p>
-                            <p className="text-sm text-gray-500">{r.categoryId}</p>
+                            <p className="text-sm text-gray-500 italic">{typeof r.categoryId === 'string' ? '' : ''}{prefs.find(p => (typeof p.categoryId === 'object' ? p.categoryId._id : p.categoryId) === r.categoryId)?.categoryId?.description}</p>
                         </div>
                         <button
                             onClick={() => toggle(r.categoryId, r.optedIn)}
