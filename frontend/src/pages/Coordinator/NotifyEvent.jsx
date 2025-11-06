@@ -31,6 +31,7 @@ export default function NotifyEvent() {
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
                 <input className="border p-2" placeholder="Subject"
                     value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+                <Toolbar value={form.message} onChange={(val)=>setForm({...form, message: val})} />
                 <textarea className="border p-2 min-h-[200px] font-mono" placeholder="Message (HTML allowed)"
                     value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
                 <div className="flex gap-3">
@@ -38,6 +39,7 @@ export default function NotifyEvent() {
                     <button type="button" onClick={() => nav(-1)} className="px-4 py-2 rounded border">Cancel</button>
                 </div>
             </form>
+            <Preview raw={form.message} />
             <div className="mt-6 border-t pt-4">
                 <h2 className="font-semibold mb-2">Test Send</h2>
                 <TestSend id={id} source={form} />
@@ -63,6 +65,57 @@ function TestSend({ id, source }) {
         <div className="flex items-center gap-2">
             <input className="border p-2 flex-1" placeholder="youraddress@example.com" value={to} onChange={(e)=>setTo(e.target.value)} />
             <button className="bg-gray-800 text-white px-3 py-2 rounded" onClick={onTest} disabled={busy}>{busy ? 'Sending…' : 'Send Test'}</button>
+        </div>
+    );
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function renderClientPreview(raw) {
+    const msg = String(raw || '');
+    const looksHtml = msg.includes('<');
+    if (looksHtml) return msg;
+    return escapeHtml(msg).replace(/\n/g, '<br/>');
+}
+
+function Preview({ raw }) {
+    const html = renderClientPreview(raw);
+    if (!raw) return null;
+    return (
+        <div className="mt-6">
+            <h2 className="font-semibold mb-2">Preview</h2>
+            <div className="border rounded p-3 prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+        </div>
+    );
+}
+
+function Toolbar({ value, onChange }) {
+    function wrap(tagOpen, tagClose = '') {
+        const sel = window.getSelection ? String(window.getSelection()) : '';
+        if (sel) {
+            onChange(value.replace(sel, `${tagOpen}${sel}${tagClose || tagOpen.replace('<','</')}`));
+        } else {
+            onChange((value || '') + `${tagOpen}${tagClose || tagOpen.replace('<','</')}`);
+        }
+    }
+    function insert(item) {
+        onChange((value || '') + item);
+    }
+    return (
+        <div className="flex flex-wrap gap-2 text-sm">
+            <button type="button" className="px-2 py-1 border rounded" onClick={()=>wrap('<b>','</b>')}>Bold</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={()=>wrap('<i>','</i>')}>Italic</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={()=>insert('<br/>')}>Line Break</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={()=>insert('<ul>\n<li></li>\n</ul>')}>List</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={()=>insert('<a href=\"https://\">link</a>')}>Link</button>
+            <div className="ml-auto text-gray-500">
+                Placeholders: {'{{name}}'}, {'{{event.title}}'}, {'{{event.date}}'}
+            </div>
         </div>
     );
 }

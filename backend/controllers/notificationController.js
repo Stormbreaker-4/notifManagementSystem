@@ -78,6 +78,21 @@ function renderTemplate(html, user, event) {
     return out;
 }
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function formatBody(message) {
+    const msg = String(message || '');
+    // If user supplied HTML, don't escape; otherwise preserve newlines
+    const looksHtml = msg.includes('<');
+    if (looksHtml) return msg;
+    return escapeHtml(msg).replace(/\n/g, '<br/>');
+}
+
 async function notifyByEmail(req, res) {
     try {
         const eventId = req.params.id;
@@ -128,7 +143,8 @@ async function notifyByEmail(req, res) {
   <div style="font-size:12px;color:#777;margin-top:6px">Do not reply to this automated email.</div>
   </div>`;
 
-                const htmlBody = renderTemplate((message || `Update for ${event.title}`), u, event) + footer;
+                const rendered = formatBody(message || `Update for ${event.title}`);
+                const htmlBody = renderTemplate(rendered, u, event) + footer;
                 await sendEmail(u.email, subject || `Update: ${event.title}`, htmlBody);
 
                 await Notification.findByIdAndUpdate(n._id, { status: 'sent' });
@@ -190,7 +206,8 @@ async function testEmail(req, res) {
   <div>To manage your preferences, visit your profile in the portal.</div>
   <div style="font-size:12px;color:#777;margin-top:6px">Do not reply to this automated email.</div>
   </div>`;
-        const htmlBody = renderTemplate((message || `Update for ${event.title}`), fakeUser, event) + footer;
+        const rendered = formatBody(message || `Update for ${event.title}`);
+        const htmlBody = renderTemplate(rendered, fakeUser, event) + footer;
         await sendEmail(to, subject || `Test: ${event.title}`, htmlBody);
         return res.json({ attempted: 1, sent: 1, failed: 0, skipped: 0, failures: [] });
     } catch (error) {
