@@ -8,6 +8,7 @@ import Dashboard from "./pages/Coordinator/Dashboard";
 import MyEvents from "./pages/Coordinator/MyEvents";
 import CreateEvent from "./pages/Coordinator/CreateEvent";
 import EditEvent from "./pages/Coordinator/EditEvent";
+import NotifyEvent from "./pages/Coordinator/NotifyEvent";
 import EventRegistrations from "./pages/Coordinator/EventRegistrations";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ function App() {
                     <Route path="/coordinator/myevents" element={<ProtectedRoute roles={["coordinator"]}><MyEvents /></ProtectedRoute>} />
                     <Route path="/coordinator/create" element={<ProtectedRoute roles={["coordinator"]}><CreateEvent /></ProtectedRoute>} />
                     <Route path="/coordinator/edit/:id" element={<ProtectedRoute roles={["coordinator"]}><EditEvent /></ProtectedRoute>} />
+                    <Route path="/coordinator/notify/:id" element={<ProtectedRoute roles={["coordinator"]}><NotifyEvent /></ProtectedRoute>} />
                     <Route path="/coordinator/registrations/:eventId" element={<ProtectedRoute roles={["coordinator"]}><EventRegistrations /></ProtectedRoute>} />
 
 

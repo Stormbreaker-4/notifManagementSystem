@@ -2,6 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById, registerForEvent } from "../api/eventApi";
 import { AuthContext } from "../context/AuthContext";
+import CategoryBadge from "../components/CategoryBadge";
+import OrganizerContact from "../components/OrganizerContact";
 
 export default function EventDetails() {
     const { id } = useParams();
@@ -52,31 +54,11 @@ export default function EventDetails() {
     if (loading) return <p className="p-4">Loading event details...</p>;
     if (!event) return <p className="p-4 text-red-500">Event not found.</p>;
 
-    function catDisplay(name) {
-        if (!name) return "";
-        const upper = String(name).toUpperCase().replace(/_/g, " ");
-        return upper;
-    }
-
-    function catColors(name) {
-        const key = String(name || '').toLowerCase();
-        switch (key) {
-            case 'club_event': return { bg: 'bg-pink-100', text: 'text-pink-700', ring: 'ring-pink-200' };
-            case 'workshop': return { bg: 'bg-yellow-100', text: 'text-yellow-800', ring: 'ring-yellow-200' };
-            case 'recruitment': return { bg: 'bg-cyan-100', text: 'text-cyan-800', ring: 'ring-cyan-200' };
-            case 'fest': return { bg: 'bg-purple-100', text: 'text-purple-800', ring: 'ring-purple-200' };
-            default: return { bg: 'bg-gray-100', text: 'text-gray-800', ring: 'ring-gray-200' };
-        }
-    }
 
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
             <h1 className="text-3xl font-bold mb-4">{event.title}</h1>
-            {(() => { const c = catColors(event.categoryId?.name); return (
-                <div className={`inline-block ${c.bg} ${c.text} ${c.ring} ring-1 px-3 py-1 rounded-full font-semibold mb-2`}>
-                    {catDisplay(event.categoryId?.name)}
-                </div>
-            ); })()}
+            <CategoryBadge name={event.categoryId?.name} className="mb-2" />
             <p className="mb-4">{event.description}</p>
 
             <div className="mb-4">
@@ -86,9 +68,7 @@ export default function EventDetails() {
 
             <div className="border-t pt-4 mt-4">
                 <h3 className="text-lg font-semibold">Organised By</h3>
-                <p>{event.createdBy?.name}</p>
-                {event.createdBy?.email && <p className="text-sm text-gray-700">{event.createdBy.email}</p>}
-                {event.createdBy?.mobileNumber && <p className="text-sm text-gray-700">{event.createdBy.mobileNumber}</p>}
+                <OrganizerContact name={event.createdBy?.name} email={event.createdBy?.email} mobile={event.createdBy?.mobileNumber} />
             </div>
 
             {/* Meta Details (only for admin or coordinator) */}

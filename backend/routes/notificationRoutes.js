@@ -11,4 +11,8 @@ router.get('/', authorizeRoles('admin', 'coordinator'), notificationController.g
 router.put('/:id/status', authorizeRoles('admin', 'coordinator'), notificationController.updateNotificationStatus);
 router.post('/log', authorizeRoles('admin', 'coordinator'), notificationController.logDeliveryAttempt);
 
+// Send email notifications for an event to opted-in users
+router.post('/events/:id/email', authorizeRoles('admin', 'coordinator'), notificationController.notifyByEmail);
+router.post('/events/:id/email/test', authorizeRoles('admin', 'coordinator'), notificationController.testEmail);
+
 module.exports = router;

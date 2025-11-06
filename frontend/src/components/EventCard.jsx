@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import CategoryBadge from "./CategoryBadge";
 
 function catDisplay(name) {
     if (!name) return "";
@@ -18,11 +19,12 @@ function catColors(name) {
 
 export default function EventCard({ event }) {
     const name = (typeof event.categoryId === 'object' ? event.categoryId?.name : event.category) || '';
-    const c = catColors(name);
     return (
         <div className="relative border rounded-lg p-4 shadow hover:shadow-lg transition">
             {name && (
-                <div className={`absolute top-2 right-2 ${c.bg} ${c.text} ${c.ring} ring-1 px-2 py-0.5 rounded-full text-xs font-semibold`}>{catDisplay(name)}</div>
+                <div className="absolute top-2 right-2 text-xs">
+                    <CategoryBadge name={name} />
+                </div>
             )}
             <h2 className="text-xl font-bold mb-2">{event.title}</h2>
             <p className="text-gray-700 line-clamp-3 mb-3">{event.description}</p>

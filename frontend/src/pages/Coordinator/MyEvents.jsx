@@ -69,6 +69,7 @@ export default function MyEvents() {
                             {openRegs[e._id]?.open ? 'Hide' : 'Registrations'}
                         </button>
                         <button className="text-blue-600 underline" onClick={() => onDownloadCsv(e._id)}>CSV</button>
+                        <button className="text-blue-600 underline" onClick={() => nav(`/coordinator/notify/${e._id}`)}>Notify</button>
                         <button className="text-indigo-700 underline" onClick={() => nav(`/coordinator/edit/${e._id}`)}>Edit</button>
                         <button className="text-red-600 underline" onClick={() => onDelete(e._id)}>Delete</button>
                     </td>

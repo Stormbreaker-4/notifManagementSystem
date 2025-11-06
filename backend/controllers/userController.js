@@ -1,5 +1,10 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const Preference = require('../models/Preference');
+const Event = require('../models/Event');
+const Notification = require('../models/Notification');
+const DeliveryLog = require('../models/DeliveryLog');
+const RefreshToken = require('../models/RefreshToken');
 
 async function createUser(req, res) {
     try {
@@ -71,9 +76,20 @@ async function updateUser(req, res) {
 
 async function deleteUser(req, res) {
     try {
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        const userId = req.params.id;
+        const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser) return res.status(404).json({ message: 'User not found' });
-        res.json({ message: `User named '${deletedUser.name}' deleted` });
+        // Cascade clean-up
+        const userNotifs = await Notification.find({ userId }).select('_id');
+        const notifIds = userNotifs.map(n => n._id);
+        await Promise.all([
+            Preference.deleteMany({ userId }),
+            Event.updateMany({}, { $pull: { registrations: userId } }),
+            DeliveryLog.deleteMany({ notificationId: { $in: notifIds } }),
+            Notification.deleteMany({ userId }),
+            RefreshToken.deleteMany({ userId })
+        ]);
+        res.json({ message: `User named '${deletedUser.name}' deleted and references removed` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
