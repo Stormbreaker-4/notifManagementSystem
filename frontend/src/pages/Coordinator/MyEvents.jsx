@@ -3,20 +3,27 @@ import { fetchEvents, deleteEvent, listRegistrations, downloadRegistrationsCsv }
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import CategoryBadge from "../../components/CategoryBadge";
 
 export default function MyEvents() {
     const { user } = useContext(AuthContext);
+    const nav = useNavigate();
     const [mine, setMine] = useState([]);
-    const [openRegs, setOpenRegs] = useState({}); // eventId -> { rows, open }
+    const [openRegs, setOpenRegs] = useState({});
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         (async () => {
-            const { data } = await fetchEvents();
-            const list = (data || []).filter((e) => {
-                const createdBy = typeof e.createdBy === "object" ? e.createdBy._id : e.createdBy;
-                return createdBy === user?._id;
-            });
-            setMine(list);
+            try {
+                const { data } = await fetchEvents();
+                const list = (data || []).filter((e) => {
+                    const createdBy = typeof e.createdBy === "object" ? e.createdBy._id : e.createdBy;
+                    return createdBy === user?._id;
+                });
+                setMine(list);
+            } finally {
+                setLoading(false);
+            }
         })();
     }, [user?._id]);
 
@@ -63,95 +70,172 @@ export default function MyEvents() {
             setOpenRegs(prev => ({ ...prev, [id]: { ...current, open: false } }));
             return;
         }
-        // open and fetch if not present
         if (!current.rows.length) {
-            const { data } = await listRegistrations(id);
-            setOpenRegs(prev => ({ ...prev, [id]: { open: true, rows: data } }));
+            try {
+                const { data } = await listRegistrations(id);
+                setOpenRegs(prev => ({ ...prev, [id]: { open: true, rows: data } }));
+            } catch (e) {
+                toast.error('Failed to load registrations');
+            }
         } else {
             setOpenRegs(prev => ({ ...prev, [id]: { ...current, open: true } }));
         }
     }
 
     async function onDownloadCsv(id) {
-        const res = await downloadRegistrationsCsv(id);
-        const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `event_${id}_registrations.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+        try {
+            const res = await downloadRegistrationsCsv(id);
+            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `event_${id}_registrations.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            toast.success('CSV downloaded successfully');
+        } catch (e) {
+            toast.error('Failed to download CSV');
+        }
     }
 
-    const nav = useNavigate();
+    const formatDate = (dateString) => {
+        if (!dateString) return "TBA";
+        return new Date(dateString).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
-    function EventRow({ e }) {
-        const [editing, setEditing] = useState(false);
-        // now edit navigates to dedicated page
-
+    if (loading) {
         return (
-            <>
-                <tr key={e._id}>
-                    <td className="border px-3 py-2">{e.title}</td>
-                    <td className="border px-3 py-2">{e.eventDateTime ? new Date(e.eventDateTime).toLocaleString() : "TBA"}</td>
-                    <td className="border px-3 py-2">{e.venue || "TBA"}</td>
-                    <td className="border px-3 py-2 space-x-2">
-                        <button className="text-blue-600 underline" onClick={() => onToggleRegistrations(e._id)}>
-                            {openRegs[e._id]?.open ? 'Hide' : 'Registrations'}
-                        </button>
-                        <button className="text-blue-600 underline" onClick={() => onDownloadCsv(e._id)}>CSV</button>
-                        <button className="text-blue-600 underline" onClick={() => nav(`/coordinator/notify/${e._id}`)}>Notify</button>
-                        <button className="text-indigo-700 underline" onClick={() => nav(`/coordinator/edit/${e._id}`)}>Edit</button>
-                        <button className="text-red-600 underline" onClick={() => onDelete(e._id)}>Delete</button>
-                    </td>
-                </tr>
-                <tr>
-                    {openRegs[e._id]?.open && (
-                        <td colSpan={4} className="border px-3 py-2 bg-gray-50">
-                            {!openRegs[e._id].rows.length ? (
-                                <p className="text-gray-600">No registrations yet.</p>
-                            ) : (
-                                <ul className="list-disc pl-6 space-y-1">
-                                    {openRegs[e._id].rows.map((r, idx) => (
-                                        <li key={idx}>{r.name} &lt;{r.email}&gt;</li>
-                                    ))}
-                                </ul>
-                            )}
-                        </td>
-                    )}
-                </tr>
-            </>
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+                <div className="max-w-7xl mx-auto text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                    <p className="mt-4 text-gray-600">Loading events...</p>
+                </div>
+            </div>
         );
     }
 
     return (
-        <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-                <button onClick={() => nav("/coordinator/dashboard")} className="px-3 py-1 border rounded hover:bg-gray-100">
-                    ← Back
-                </button>
-                <h1 className="text-2xl font-bold">My Events</h1>
-            </div>
-            {!mine.length ? (
-                <p className="text-gray-600">No events yet.</p>
-            ) : (
-                <table className="w-full border-collapse border">
-                    <thead>
-                        <tr className="bg-gray-200">
-                            <th className="border px-3 py-2 text-left">Title</th>
-                            <th className="border px-3 py-2 text-left">Date</th>
-                            <th className="border px-3 py-2 text-left">Venue</th>
-                            <th className="border px-3 py-2 text-left">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {mine.map((e) => (
-                            <EventRow key={e._id} e={e} />
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => nav("/coordinator/dashboard")} className="px-3 py-1 border rounded hover:bg-gray-100">
+                            ← Back
+                        </button>
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-800">My Events</h1>
+                            <p className="text-gray-600 mt-1">Manage your events and view registrations</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => nav("/coordinator/create")}
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md"
+                    >
+                        + Create Event
+                    </button>
+                </div>
+
+                {!mine.length ? (
+                    <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                        <p className="text-gray-600 text-lg mb-4">No events yet.</p>
+                        <button
+                            onClick={() => nav("/coordinator/create")}
+                            className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                        >
+                            Create Your First Event
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {mine.map((event) => (
+                            <div key={event._id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all p-6">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h3>
+                                        <CategoryBadge name={event.categoryId?.name} />
+                                    </div>
+                                </div>
+                                
+                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                                
+                                <div className="space-y-2 mb-4 text-sm text-gray-600">
+                                    <p className="flex items-center gap-2">
+                                        <span>📅</span>
+                                        <span>{formatDate(event.eventDateTime)}</span>
+                                    </p>
+                                    {event.venue && (
+                                        <p className="flex items-center gap-2">
+                                            <span>📍</span>
+                                            <span>{event.venue}</span>
+                                        </p>
+                                    )}
+                                    <p className="flex items-center gap-2">
+                                        <span>👥</span>
+                                        <span>{event.registrations?.length || 0} registrations</span>
+                                    </p>
+                                </div>
+
+                                {openRegs[event._id]?.open && (
+                                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                                        <h4 className="font-semibold text-gray-800 mb-2">Registrations:</h4>
+                                        {!openRegs[event._id].rows.length ? (
+                                            <p className="text-gray-600 text-sm">No registrations yet.</p>
+                                        ) : (
+                                            <ul className="space-y-1">
+                                                {openRegs[event._id].rows.map((r, idx) => (
+                                                    <li key={idx} className="text-sm text-gray-700">
+                                                        {r.name} &lt;{r.email}&gt;
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => onToggleRegistrations(event._id)}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                                    >
+                                        {openRegs[event._id]?.open ? 'Hide' : 'View'} Registrations
+                                    </button>
+                                    <button
+                                        onClick={() => onDownloadCsv(event._id)}
+                                        className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-700 transition-colors"
+                                    >
+                                        Download CSV
+                                    </button>
+                                    <button
+                                        onClick={() => nav(`/coordinator/notify/${event._id}`)}
+                                        className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                                    >
+                                        Notify
+                                    </button>
+                                    <button
+                                        onClick={() => nav(`/coordinator/edit/${event._id}`)}
+                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => onDelete(event._id)}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </tbody>
-                </table>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

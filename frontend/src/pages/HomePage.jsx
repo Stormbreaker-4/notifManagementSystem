@@ -45,27 +45,39 @@ export default function HomePage() {
     const onRegister = undefined;
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-                <h1 className="text-3xl font-bold text-indigo-600">Events</h1>
-                <input
-                    placeholder="Search events..."
-                    className="border rounded px-3 py-2 w-full md:w-80"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                />
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <div className="max-w-7xl mx-auto px-4 py-12">
+                <div className="text-center mb-12">
+                    <h1 className="text-5xl font-bold text-gray-800 mb-4">Discover Events</h1>
+                    <p className="text-gray-600 text-lg mb-8">Explore upcoming events, workshops, and activities</p>
+                    <div className="max-w-2xl mx-auto">
+                        <input
+                            placeholder="🔍 Search events by title, description, venue, or category..."
+                            className="w-full border-2 border-gray-300 rounded-xl px-6 py-4 text-lg focus:outline-none focus:border-blue-500 shadow-lg"
+                            value={q}
+                            onChange={(e) => setQ(e.target.value)}
+                        />
+                    </div>
+                </div>
 
-            {loading ? (
-                <p className="text-gray-600">Loading…</p>
-            ) : (
-                <>
-                    <Section title="All Events" items={nonFests} onRegister={onRegister} />
-                    {!!fests.length && (
-                        <Section title="Fest Events (TechnoVIT & Vibrance)" items={fests} onRegister={onRegister} />
-                    )}
-                </>
-            )}
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <p className="mt-4 text-gray-600">Loading events...</p>
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-600 text-lg">No events found. Try a different search term.</p>
+                    </div>
+                ) : (
+                    <>
+                        <Section title="All Events" items={nonFests} onRegister={onRegister} />
+                        {!!fests.length && (
+                            <Section title="🎉 Fest Events (TechnoVIT & Vibrance)" items={fests} onRegister={onRegister} />
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 }
@@ -73,9 +85,9 @@ export default function HomePage() {
 function Section({ title, items, onRegister }) {
     if (!items.length) return null;
     return (
-        <div className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">{title}</h2>
-            <div className="grid md:grid-cols-2 gap-6">
+        <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((event) => (
                     <EventCard key={event._id || event.id} event={event} onRegister={onRegister} />
                 ))}

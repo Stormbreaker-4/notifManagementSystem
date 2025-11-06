@@ -10,6 +10,12 @@ import CreateEvent from "./pages/Coordinator/CreateEvent";
 import EditEvent from "./pages/Coordinator/EditEvent";
 import NotifyEvent from "./pages/Coordinator/NotifyEvent";
 import EventRegistrations from "./pages/Coordinator/EventRegistrations";
+import AdminDashboard from "./pages/Admin/Dashboard";
+import UserManagement from "./pages/Admin/UserManagement";
+import CategoryManagement from "./pages/Admin/CategoryManagement";
+import AllEvents from "./pages/Admin/AllEvents";
+import NotificationMonitor from "./pages/Admin/NotificationMonitor";
+import AllRegistrations from "./pages/Admin/AllRegistrations";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import EventDetails from "./pages/EventDetails";
@@ -18,8 +24,7 @@ function App() {
     return (
         <Router>
             <Navbar />
-            <div className="max-w-6xl mx-auto p-4">
-                <Routes>
+            <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
@@ -39,10 +44,18 @@ function App() {
                     <Route path="/coordinator/registrations/:eventId" element={<ProtectedRoute roles={["coordinator"]}><EventRegistrations /></ProtectedRoute>} />
 
 
+                    {/* Admin-only routes */}
+                    <Route path="/admin/dashboard" element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+                    <Route path="/admin/users" element={<ProtectedRoute roles={["admin"]}><UserManagement /></ProtectedRoute>} />
+                    <Route path="/admin/categories" element={<ProtectedRoute roles={["admin"]}><CategoryManagement /></ProtectedRoute>} />
+                    <Route path="/admin/events" element={<ProtectedRoute roles={["admin"]}><AllEvents /></ProtectedRoute>} />
+                    <Route path="/admin/notifications" element={<ProtectedRoute roles={["admin"]}><NotificationMonitor /></ProtectedRoute>} />
+                    <Route path="/admin/registrations" element={<ProtectedRoute roles={["admin"]}><AllRegistrations /></ProtectedRoute>} />
+
+
                     {/* Catch-all */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
-            </div>
         </Router>
     );
 }

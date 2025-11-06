@@ -30,35 +30,38 @@ const ProfilePage = () => {
     }
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                {/* Sidebar */}
-                <aside className="md:col-span-3">
-                    <nav className="border rounded-lg overflow-hidden">
-                        {tabs.map(t => (
-                            <button
-                                key={t.key}
-                                onClick={() => setActiveTab(t.key)}
-                                className={
-                                    "w-full text-left px-4 py-3 border-b last:border-b-0 " +
-                                    (activeTab === t.key
-                                        ? "bg-indigo-600 text-white font-medium"
-                                        : "bg-white hover:bg-gray-50")
-                                }
-                            >
-                                {t.label}
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+            <div className="max-w-6xl mx-auto">
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">My Profile</h1>
+                <p className="text-gray-600 mb-8">Manage your account settings and preferences</p>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* Sidebar */}
+                    <aside className="md:col-span-3">
+                        <nav className="bg-white rounded-xl shadow-lg overflow-hidden">
+                            {tabs.map(t => (
+                                <button
+                                    key={t.key}
+                                    onClick={() => setActiveTab(t.key)}
+                                    className={
+                                        "w-full text-left px-4 py-3 border-b last:border-b-0 transition-colors " +
+                                        (activeTab === t.key
+                                            ? "bg-indigo-600 text-white font-medium"
+                                            : "bg-white hover:bg-gray-50 text-gray-700")
+                                    }
+                                >
+                                    {t.label}
+                                </button>
+                            ))}
+                        </nav>
+                    </aside>
 
-                {/* Content */}
-                <section className="md:col-span-9">
-                    <div className="bg-white border rounded-lg p-6 shadow-sm">
-                        {tabs.find(t => t.key === activeTab)?.component}
-                    </div>
-                </section>
+                    {/* Content */}
+                    <section className="md:col-span-9">
+                        <div className="bg-white rounded-xl shadow-lg p-6">
+                            {tabs.find(t => t.key === activeTab)?.component}
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
     );

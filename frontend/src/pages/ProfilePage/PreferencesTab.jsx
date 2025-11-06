@@ -67,22 +67,27 @@ export default function PreferencesTab() {
         <div>
             <h2 className="text-lg font-semibold mb-3">Notification Preferences</h2>
             <div className="space-y-3">
-                {rows.map((r) => (
-                    <div key={r.categoryId} className="flex items-center justify-between border rounded p-3">
-                        <div>
-                            <p className="font-medium">{r.categoryName}</p>
-                            <p className="text-sm text-gray-500 italic">{typeof r.categoryId === 'string' ? '' : ''}{prefs.find(p => (typeof p.categoryId === 'object' ? p.categoryId._id : p.categoryId) === r.categoryId)?.categoryId?.description}</p>
+                {rows.map((r) => {
+                    const categoryData = prefs.find(p => (typeof p.categoryId === 'object' ? p.categoryId._id : p.categoryId) === r.categoryId)?.categoryId;
+                    const description = typeof categoryData === 'object' ? categoryData?.description : '';
+                    return (
+                        <div key={r.categoryId} className="flex items-center justify-between border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-md transition-all">
+                            <div className="flex-1">
+                                <p className="font-semibold text-gray-800 mb-1">{r.categoryName.toUpperCase().replace(/_/g, ' ')}</p>
+                                {description && <p className="text-sm text-gray-500 italic">{description}</p>}
+                            </div>
+                            <button
+                                onClick={() => toggle(r.categoryId, r.optedIn)}
+                                disabled={saving === r.categoryId}
+                                className={`ml-4 px-4 py-2 rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
+                                    r.optedIn ? "bg-green-600 hover:bg-green-700" : "bg-gray-500 hover:bg-gray-600"
+                                } ${saving === r.categoryId ? "opacity-60 cursor-not-allowed" : ""}`}
+                            >
+                                {saving === r.categoryId ? "Saving…" : r.optedIn ? "Enabled" : "Disabled"}
+                            </button>
                         </div>
-                        <button
-                            onClick={() => toggle(r.categoryId, r.optedIn)}
-                            disabled={saving === r.categoryId}
-                            className={`px-3 py-1 rounded text-white ${r.optedIn ? "bg-green-600" : "bg-gray-500"
-                                } ${saving === r.categoryId ? "opacity-60" : ""}`}
-                        >
-                            {saving === r.categoryId ? "Saving…" : r.optedIn ? "Enabled" : "Disabled"}
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

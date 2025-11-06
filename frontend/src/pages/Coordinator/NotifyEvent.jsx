@@ -58,28 +58,37 @@ export default function NotifyEvent() {
     }
 
     return (
-        <div className="p-6 max-w-xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Notify Participants (Email)</h1>
-            <form onSubmit={onSubmit} className="flex flex-col gap-3">
-                <input className="border p-2" placeholder="Subject"
-                    value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-                <RichTextEditor
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    placeholder="Message (HTML allowed). Use toolbar for formatting. Placeholders: {{name}}, {{event.title}}, {{event.date}}, etc."
-                />
-                <div className="text-sm text-gray-600">
-                    <strong>Placeholders:</strong> {'{{name}}'}, {'{{email}}'}, {'{{event.title}}'}, {'{{event.date}}'}, {'{{event.venue}}'}, {'{{event.category}}'}, {'{{coordinator.name}}'}, {'{{coordinator.email}}'}, {'{{coordinator.mobile}}'}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+            <div className="max-w-xl mx-auto">
+                <div className="flex items-center gap-4 mb-6">
+                    <button onClick={() => nav("/coordinator/myevents")} className="px-3 py-1 border rounded hover:bg-gray-100">
+                        ← Back
+                    </button>
+                    <h1 className="text-2xl font-bold">Notify Participants (Email)</h1>
                 </div>
-                <div className="flex gap-3">
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">Send Email</button>
-                    <button type="button" onClick={() => nav(-1)} className="px-4 py-2 rounded border">Cancel</button>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+                        <input className="border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="Subject"
+                            value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+                        <RichTextEditor
+                            value={form.message}
+                            onChange={(e) => setForm({ ...form, message: e.target.value })}
+                            placeholder="Message (HTML allowed). Use toolbar for formatting. Placeholders: {{name}}, {{event.title}}, {{event.date}}, etc."
+                        />
+                        <div className="text-sm text-gray-600">
+                            <strong>Placeholders:</strong> {'{{name}}'}, {'{{email}}'}, {'{{event.title}}'}, {'{{event.date}}'}, {'{{event.venue}}'}, {'{{event.category}}'}, {'{{coordinator.name}}'}, {'{{coordinator.email}}'}, {'{{coordinator.mobile}}'}
+                        </div>
+                        <div className="flex gap-3">
+                            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" type="submit">Send Email</button>
+                            <button type="button" onClick={() => nav(-1)} className="px-4 py-2 rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
+                        </div>
+                    </form>
+                    <Preview raw={form.message} />
+                    <div className="mt-6 border-t pt-4">
+                        <h2 className="font-semibold mb-2">Test Send</h2>
+                        <TestSend id={id} source={form} />
+                    </div>
                 </div>
-            </form>
-            <Preview raw={form.message} />
-            <div className="mt-6 border-t pt-4">
-                <h2 className="font-semibold mb-2">Test Send</h2>
-                <TestSend id={id} source={form} />
             </div>
         </div>
     );

@@ -46,7 +46,7 @@ export default function Navbar() {
     const activeClass =
         "underline underline-offset-4";
 
-    const FirstName = user?.name?.split(" ")[0] || (user?.role === 'admin' ? 'System' : 'Profile');
+    const FirstName = user?.name?.split(" ")[0] || (user?.role === 'admin' ? 'Dashboard' : 'Profile');
     const initial = (user?.name || (user?.role === 'admin' ? 'S' : 'P')).charAt(0).toUpperCase();
     const roleColor = !user ? "bg-gray-400" : user.role === 'student' ? "bg-green-600" : user.role === 'coordinator' ? "bg-purple-600" : user.role === 'admin' ? "bg-red-600" : "bg-gray-600";
 
@@ -86,7 +86,7 @@ export default function Navbar() {
                         )}
                         {user && user.role === 'admin' && (
                             <>
-                                <NavLink to="/profile" className={({ isActive }) => `${linkBase} ${isActive ? activeClass : ""}`}>System</NavLink>
+                                <NavLink to="/admin/dashboard" className={({ isActive }) => `${linkBase} ${isActive ? activeClass : ""}`}>Dashboard</NavLink>
                             </>
                         )}
 
@@ -150,7 +150,7 @@ export default function Navbar() {
                     )}
                     {user && user.role === 'admin' && (
                         <>
-                            <NavLink to="/profile" onClick={() => setIsOpen(false)} className={({ isActive }) => `${linkBase} block ${isActive ? activeClass : ""}`}>System</NavLink>
+                            <NavLink to="/admin/dashboard" onClick={() => setIsOpen(false)} className={({ isActive }) => `${linkBase} block ${isActive ? activeClass : ""}`}>Dashboard</NavLink>
                             <button onClick={handleLogout} className="block">Logout</button>
                         </>
                     )}

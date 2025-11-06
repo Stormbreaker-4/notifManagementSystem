@@ -19,20 +19,40 @@ function catColors(name) {
 
 export default function EventCard({ event }) {
     const name = (typeof event.categoryId === 'object' ? event.categoryId?.name : event.category) || '';
+    const date = event.eventDateTime ? new Date(event.eventDateTime).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'TBA';
+    
     return (
-        <div className="relative border rounded-lg p-4 shadow hover:shadow-lg transition">
+        <div className="relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 transform hover:-translate-y-1 border border-gray-100">
             {name && (
-                <div className="absolute top-2 right-2 text-xs">
+                <div className="absolute top-4 right-4">
                     <CategoryBadge name={name} />
                 </div>
             )}
-            <h2 className="text-xl font-bold mb-2">{event.title}</h2>
-            <p className="text-gray-700 line-clamp-3 mb-3">{event.description}</p>
+            <h2 className="text-xl font-bold mb-3 text-gray-800 pr-20">{event.title}</h2>
+            <p className="text-gray-600 line-clamp-3 mb-4 text-sm">{event.description}</p>
+            <div className="space-y-2 mb-4 text-sm text-gray-500">
+                <p className="flex items-center gap-2">
+                    <span>📅</span>
+                    <span>{date}</span>
+                </p>
+                {event.venue && (
+                    <p className="flex items-center gap-2">
+                        <span>📍</span>
+                        <span>{event.venue}</span>
+                    </p>
+                )}
+            </div>
             <Link
                 to={`/events/${event._id}`}
-                className="text-blue-600 font-semibold hover:underline"
+                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-                View Details
+                View Details →
             </Link>
         </div>
     );
