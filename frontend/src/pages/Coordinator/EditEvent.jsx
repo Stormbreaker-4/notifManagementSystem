@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getEventById, updateEvent } from "../../api/eventApi";
 import { fetchAllCategories } from "../../api/categoryApi";
+import toast from "react-hot-toast";
 
 export default function EditEvent() {
     const { id } = useParams();
@@ -9,8 +10,6 @@ export default function EditEvent() {
     const [original, setOriginal] = useState(null);
     const [form, setForm] = useState({ title: "", description: "", date: "", time: "", venue: "", categoryId: "" });
     const [categories, setCategories] = useState([]);
-    const [err, setErr] = useState("");
-    const [ok, setOk] = useState("");
 
     useEffect(() => {
         (async () => {
@@ -30,7 +29,7 @@ export default function EditEvent() {
                     categoryId: ev.categoryId?._id || ev.categoryId || "",
                 });
             } catch (e) {
-                setErr(e?.response?.data?.message || "Failed to load event");
+                toast.error(e?.response?.data?.message || "Failed to load event");
             }
         })();
     }, [id]);
@@ -50,28 +49,64 @@ export default function EditEvent() {
 
     async function onSubmit(e) {
         e.preventDefault();
-        setErr(""); setOk("");
-        const payload = buildPatchPayload();
-        if (!Object.keys(payload).length) {
-            setOk("No changes to save.");
+        if (!form.title.trim()) {
+            toast.error('Event title is required');
             return;
         }
-        if (!window.confirm("Save changes to this event?")) return;
-        try {
-            await updateEvent(id, payload);
-            setOk("Event updated.");
-            setTimeout(() => nav("/coordinator/myevents"), 600);
-        } catch (e2) {
-            setErr(e2?.response?.data?.message || "Update failed");
+        if (!form.categoryId) {
+            toast.error('Category is required');
+            return;
         }
+        if (!form.date) {
+            toast.error('Event date is required');
+            return;
+        }
+        
+        const payload = buildPatchPayload();
+        if (!Object.keys(payload).length) {
+            toast.success("No changes to save.");
+            return;
+        }
+        
+        const confirmed = await new Promise((resolve) => {
+            toast((t) => (
+                <div>
+                    <p className="mb-2">Save changes to this event?</p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(true); }}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                        >
+                            Yes
+                        </button>
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(false); }}
+                            className="px-3 py-1 bg-gray-300 rounded text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ), { duration: Infinity });
+        });
+        
+        if (!confirmed) return;
+        
+        const promise = updateEvent(id, payload).then(() => {
+            setTimeout(() => nav("/coordinator/myevents"), 1500);
+            return "Event updated successfully!";
+        });
+        
+        toast.promise(promise, {
+            loading: 'Updating event...',
+            success: (msg) => msg,
+            error: (err) => err?.response?.data?.message || "Update failed",
+        });
     }
 
     return (
         <div className="p-6 max-w-xl mx-auto">
             <h1 className="text-2xl font-bold mb-4">Edit Event</h1>
-            {err && <p className="text-red-600 mb-2">{err}</p>}
-            {ok && <p className="text-green-600 mb-2">{ok}</p>}
-
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
                 <input className="border p-2" placeholder="Event Title" value={form.title}
                        onChange={(e) => setForm({ ...form, title: e.target.value })} />

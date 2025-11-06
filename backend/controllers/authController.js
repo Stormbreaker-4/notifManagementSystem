@@ -52,6 +52,21 @@ async function revokeRefresh(userId, rawToken, replacedBy = null) {
 async function registerUser(req, res) {
     try {
         const { name, email, password, role, mobileNumber } = req.body;
+        
+        // Validation
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Name, email, and password are required' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+        if (mobileNumber && !/^\+91[0-9]{10}$/.test(mobileNumber.replace(/\s/g, ''))) {
+            return res.status(400).json({ message: 'Mobile number must be in format +911234567890 (+91 followed by 10 digits)' });
+        }
+        
         const existing = await User.findOne({ email });
         if (existing) return res.status(400).json({ message: 'User already exists' });
 

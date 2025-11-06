@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { fetchEvents, deleteEvent, listRegistrations, downloadRegistrationsCsv } from "../../api/eventApi";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function MyEvents() {
     const { user } = useContext(AuthContext);
@@ -20,9 +21,40 @@ export default function MyEvents() {
     }, [user?._id]);
 
     async function onDelete(id) {
-        if (!window.confirm('Delete this event?')) return;
-        await deleteEvent(id);
-        setMine((prev) => prev.filter(e => e._id !== id));
+        const confirmed = await new Promise((resolve) => {
+            toast((t) => (
+                <div>
+                    <p className="mb-2">Delete this event?</p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(true); }}
+                            className="px-3 py-1 bg-red-600 text-white rounded text-sm"
+                        >
+                            Delete
+                        </button>
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(false); }}
+                            className="px-3 py-1 bg-gray-300 rounded text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ), { duration: Infinity });
+        });
+        
+        if (!confirmed) return;
+        
+        const promise = deleteEvent(id).then(() => {
+            setMine((prev) => prev.filter(e => e._id !== id));
+            return "Event deleted successfully!";
+        });
+        
+        toast.promise(promise, {
+            loading: 'Deleting event...',
+            success: (msg) => msg,
+            error: (err) => err?.response?.data?.message || "Failed to delete event",
+        });
     }
 
     async function onToggleRegistrations(id) {
@@ -95,7 +127,12 @@ export default function MyEvents() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">My Events</h1>
+            <div className="flex items-center gap-4 mb-4">
+                <button onClick={() => nav("/coordinator/dashboard")} className="px-3 py-1 border rounded hover:bg-gray-100">
+                    ← Back
+                </button>
+                <h1 className="text-2xl font-bold">My Events</h1>
+            </div>
             {!mine.length ? (
                 <p className="text-gray-600">No events yet.</p>
             ) : (

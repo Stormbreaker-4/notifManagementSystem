@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
     const { register } = useContext(AuthContext);
@@ -8,24 +9,50 @@ export default function RegisterPage() {
     const [form, setForm] = useState({
         name: "", email: "", password: "", mobileNumber: "", role: "student",
     });
-    const [err, setErr] = useState("");
+
+    function validate() {
+        if (!form.name.trim()) {
+            toast.error('Name is required');
+            return false;
+        }
+        if (!form.email.trim()) {
+            toast.error('Email is required');
+            return false;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+            toast.error('Please provide a valid email address');
+            return false;
+        }
+        if (form.password.length < 6) {
+            toast.error('Password must be at least 6 characters long');
+            return false;
+        }
+        if (form.mobileNumber && !/^\+91[0-9]{10}$/.test(form.mobileNumber.replace(/\s/g, ''))) {
+            toast.error('Mobile number must be in format +911234567890 (+91 followed by 10 digits)');
+            return false;
+        }
+        return true;
+    }
 
     async function onSubmit(e) {
         e.preventDefault();
-        setErr("");
-        try {
-            await register(form);
+        if (!validate()) return;
+        const promise = register(form).then(() => {
             nav("/");
-        } catch (e2) {
-            setErr(e2?.response?.data?.message || "Registration failed");
-        }
+            return "Registration successful!";
+        });
+        
+        toast.promise(promise, {
+            loading: 'Registering...',
+            success: (msg) => msg,
+            error: (err) => err?.response?.data?.message || "Registration failed",
+        });
     }
 
     return (
         <div className="flex justify-center items-center min-h-[70vh]">
             <form onSubmit={onSubmit} className="bg-white shadow p-6 rounded w-96 space-y-3">
                 <h1 className="text-xl font-bold">Register</h1>
-                {err && <p className="text-red-600 text-sm">{err}</p>}
                 <input className="border p-2 w-full" placeholder="Name"
                     value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 <input className="border p-2 w-full" placeholder="Email"

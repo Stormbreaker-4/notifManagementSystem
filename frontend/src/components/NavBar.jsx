@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -8,13 +9,36 @@ export default function Navbar() {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        if (window.confirm('Are you sure you want to logout?')) {
-            logout();
-            setIsOpen(false);
-            setProfileOpen(false);
-            navigate("/", { replace: true });
-        }
+    const handleLogout = async () => {
+        const confirmed = await new Promise((resolve) => {
+            toast((t) => (
+                <div>
+                    <p className="mb-2">Are you sure you want to logout?</p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(true); }}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                        >
+                            Yes
+                        </button>
+                        <button
+                            onClick={() => { toast.dismiss(t.id); resolve(false); }}
+                            className="px-3 py-1 bg-gray-300 rounded text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ), { duration: Infinity });
+        });
+        
+        if (!confirmed) return;
+        
+        logout();
+        setIsOpen(false);
+        setProfileOpen(false);
+        toast.success('Logged out successfully');
+        navigate("/", { replace: true });
     };
 
     const linkBase =

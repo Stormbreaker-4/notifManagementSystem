@@ -4,6 +4,7 @@ import { getEventById, registerForEvent } from "../api/eventApi";
 import { AuthContext } from "../context/AuthContext";
 import CategoryBadge from "../components/CategoryBadge";
 import OrganizerContact from "../components/OrganizerContact";
+import toast from "react-hot-toast";
 
 export default function EventDetails() {
     const { id } = useParams();
@@ -37,18 +38,20 @@ export default function EventDetails() {
     };
 
     const handleRegister = async () => {
-        try {
-            const { data } = await registerForEvent(id);
-            alert(data.message || "Registered successfully!");
-
+        const promise = registerForEvent(id).then(({ data }) => {
             setEvent((prev) => ({
                 ...prev,
                 registrations: [...(prev.registrations || []), user?._id],
             }));
-        } catch (error) {
-            console.error("Error registering:", error);
-            alert(error.response?.data?.message || "Registration failed!");
-        }
+            setTimeout(() => navigate("/"), 1500);
+            return data.message || "Registered successfully!";
+        });
+        
+        toast.promise(promise, {
+            loading: 'Registering...',
+            success: (msg) => msg,
+            error: (err) => err?.response?.data?.message || "Registration failed!",
+        });
     };
 
     if (loading) return <p className="p-4">Loading event details...</p>;
@@ -88,12 +91,15 @@ export default function EventDetails() {
                 >
                     ← Back to Events
                 </button>
-                <button
-                    onClick={handleRegister}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                    Register
-                </button>
+                {user && user.role === 'student' && (
+                    <button
+                        onClick={handleRegister}
+                        disabled={event.registrations?.some(r => (typeof r === 'object' ? r._id : r) === user._id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        {event.registrations?.some(r => (typeof r === 'object' ? r._id : r) === user._id) ? 'Already Registered' : 'Register'}
+                    </button>
+                )}
             </div>
         </div>
     );
