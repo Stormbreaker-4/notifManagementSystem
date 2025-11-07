@@ -51,6 +51,24 @@ describe('RegisterPage', () => {
 		expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
 	});
 
+	test('shows validation error for missing name', async () => {
+		const mockRegister = jest.fn();
+		renderWithContext(mockRegister);
+
+		// Fill all fields except name
+		fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'test@example.com' } });
+		fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
+
+		fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+		await waitFor(() => {
+      // This error message comes from your component's validate() function
+			expect(mockToastError).toHaveBeenCalledWith('Name is required');
+		});
+
+		expect(mockRegister).not.toHaveBeenCalled();
+	});
+  
 	test('shows validation error for short password', async () => {
 		const mockRegister = jest.fn();
 		renderWithContext(mockRegister);
@@ -62,7 +80,29 @@ describe('RegisterPage', () => {
 		fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
 		await waitFor(() => {
+      // This error message comes from your component's validate() function
 			expect(mockToastError).toHaveBeenCalledWith('Password must be at least 6 characters long');
+		});
+
+		expect(mockRegister).not.toHaveBeenCalled();
+	});
+
+	test('shows validation error for invalid mobile number', async () => {
+		const mockRegister = jest.fn();
+		renderWithContext(mockRegister);
+    
+    // Fill all fields, but mobile is invalid
+		fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: 'Test User' } });
+		fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'test@example.com' } });
+		fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('Mobile Number (+911234567890)'), { target: { value: '12345' } });
+
+
+		fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+		await waitFor(() => {
+      // This error message comes from your component's validate() function
+			expect(mockToastError).toHaveBeenCalledWith('Mobile number must be in format +911234567890 (+91 followed by 10 digits)');
 		});
 
 		expect(mockRegister).not.toHaveBeenCalled();
